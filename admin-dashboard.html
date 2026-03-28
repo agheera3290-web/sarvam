@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - SARVAM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; background: linear-gradient(135deg, #0a0f1e, #0d1b3e); font-family: 'Segoe UI', sans-serif; color: #fff; }
+    nav { background: rgba(13,27,62,0.95); border-bottom: 1px solid #1e3a5f; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .brand { background: linear-gradient(90deg, #0066ff, #00ccaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 22px; letter-spacing: 4px; }
+    .btn-sm { padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; font-family: inherit; border: 1px solid #1e3a5f; background: transparent; color: #94a3b8; }
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+    .hosp-card { background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(0,102,255,0.07)); border: 1px solid #1e3a5f; border-radius: 20px; padding: 24px 28px; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+    .hosp-card h2 { font-size: 21px; margin-bottom: 8px; }
+    .hosp-card p { color: #64748b; font-size: 13px; margin-top: 4px; }
+    .id-box { background: rgba(124,58,237,0.1); border: 1px solid #7c3aed44; border-radius: 10px; padding: 12px 18px; text-align: right; }
+    .id-box small { color: #64748b; font-size: 11px; display: block; }
+    .id-box span { color: #7c3aed; font-size: 20px; font-weight: 900; letter-spacing: 3px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat { background: rgba(255,255,255,0.02); border: 1px solid #1e3a5f; border-radius: 12px; padding: 16px; text-align: center; }
+    .stat .num { font-size: 30px; font-weight: 800; }
+    .stat .lbl { font-size: 11px; color: #64748b; margin-top: 4px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .tab { padding: 10px 22px; border-radius: 20px; border: none; background: rgba(255,255,255,0.05); color: #94a3b8; cursor: pointer; font-family: inherit; font-size: 14px; }
+    .tab.active { background: linear-gradient(135deg, #7c3aed, #0066ff); color: #fff; font-weight: 700; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card { background: rgba(255,255,255,0.02); border: 1px solid #1e3a5f; border-radius: 16px; padding: 22px; }
+    input { width: 100%; padding: 11px 14px; border-radius: 9px; border: 1px solid #1e3a5f; background: #0a0f1e; color: #fff; font-size: 14px; outline: none; margin-bottom: 10px; font-family: inherit; }
+    .btn { padding: 12px 24px; border-radius: 10px; border: none; background: linear-gradient(135deg, #7c3aed, #0066ff); color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px; }
+    .btn-approve { padding: 8px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, #00ccaa, #0066ff); color: #fff; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; }
+    .btn-reject { padding: 8px 16px; border-radius: 8px; border: 1px solid #ef4444; background: transparent; color: #ef4444; cursor: pointer; font-family: inherit; font-size: 13px; }
+    .doc-card { background: rgba(255,255,255,0.02); border: 1px solid #1e3a5f; border-radius: 12px; padding: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .doc-card.pending { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.04); }
+    .doc-card.approved { border-color: rgba(0,204,170,0.2); background: rgba(0,204,170,0.02); }
+    .doc-card p { margin: 0; font-weight: 600; }
+    .doc-card small { color: #64748b; font-size: 12px; }
+    .staff-card { background: rgba(255,255,255,0.02); border: 1px solid #1e3a5f; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; }
+    .visit-card { background: rgba(255,255,255,0.02); border: 1px solid #1e3a5f; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: rgba(0,204,170,0.9); color: #0a0f1e; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; display: none; z-index: 999; }
+    .empty { color: #4a5568; font-size: 13px; padding: 12px 0; }
+    .sec-head { font-size: 14px; color: #64748b; margin-bottom: 12px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div><span class="brand">SARVAM</span><span style="color:#64748b;font-size:13px;margin-left:10px">— Admin Panel</span></div>
+    <button class="btn-sm" onclick="logout()">Logout</button>
+  </nav>
+  <main>
+    <div class="hosp-card">
+      <div>
+        <h2 id="h-name">Hospital</h2>
+        <p id="h-addr">—</p>
+        <p id="h-contact">—</p>
+      </div>
+      <div class="id-box">
+        <small>Hospital ID</small>
+        <span id="h-uid">—</span>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num" id="st-pending" style="color:#f59e0b">0</div><div class="lbl">Pending Doctors</div></div>
+      <div class="stat"><div class="num" id="st-approved" style="color:#00ccaa">0</div><div class="lbl">Approved Doctors</div></div>
+      <div class="stat"><div class="num" id="st-staff" style="color:#0066ff">0</div><div class="lbl">Staff Members</div></div>
+      <div class="stat"><div class="num" id="st-visits" style="color:#7c3aed">0</div><div class="lbl">Visit Logs</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('doctors')">👨‍⚕️ Doctors</button>
+      <button class="tab" onclick="switchTab('add-doctor')">➕ Add Doctor</button>
+      <button class="tab" onclick="switchTab('staff')">👥 Staff</button>
+      <button class="tab" onclick="switchTab('visits')">📋 Visit Logs</button>
+    </div>
+
+    <div class="panel active" id="panel-doctors">
+      <div id="pending-section" style="margin-bottom:24px"></div>
+      <div>
+        <div class="sec-head">✓ Approved Doctors</div>
+        <div id="approved-list"><p class="empty">No approved doctors yet.</p></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-add-doctor">
+      <div class="card" style="max-width:500px">
+        <h3 style="color:#e2e8f0;margin-bottom:8px;font-size:16px">Add Doctor by Unique ID</h3>
+        <p style="color:#64748b;font-size:13px;margin-bottom:16px">Add a doctor who already has a SARVAM Doctor ID.</p>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="add-docid" placeholder="Doctor Unique ID" style="margin-bottom:0;flex:1" />
+          <button class="btn" onclick="addDoctorById()">Add</button>
+        </div>
+        <div style="color:#ef4444;font-size:13px;margin-top:8px" id="add-err"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-staff">
+      <div class="card" style="max-width:500px;margin-bottom:20px">
+        <h3 style="color:#e2e8f0;font-size:15px;margin-bottom:16px">Add Staff Member</h3>
+        <input type="text" id="s-name" placeholder="Name *" />
+        <input type="text" id="s-role" placeholder="Role (Nurse, Receptionist...)" />
+        <input type="tel" id="s-phone" placeholder="Phone" />
+        <input type="email" id="s-email" placeholder="Email" />
+        <input type="date" id="s-date" placeholder="Joining Date" />
+        <button class="btn" onclick="addStaff()">Add Staff</button>
+      </div>
+      <div id="staff-list"></div>
+    </div>
+
+    <div class="panel" id="panel-visits">
+      <div class="card" style="max-width:500px;margin-bottom:20px">
+        <h3 style="color:#e2e8f0;font-size:15px;margin-bottom:16px">Add Patient Visit Log</h3>
+        <input type="text" id="v-name" placeholder="Patient Name *" />
+        <input type="number" id="v-age" placeholder="Age" />
+        <input type="tel" id="v-phone" placeholder="Phone" />
+        <input type="date" id="v-date" />
+        <input type="text" id="v-reason" placeholder="Reason / Diagnosis" />
+        <input type="text" id="v-doctor" placeholder="Doctor Name" />
+        <button class="btn" onclick="addVisit()">Add Visit Log</button>
+      </div>
+      <div id="visits-list"></div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let hospital = null;
+
+    function getDoctors() { return JSON.parse(localStorage.getItem('sarvam_doctors') || '[]'); }
+    function saveDoctors(d) { localStorage.setItem('sarvam_doctors', JSON.stringify(d)); }
+    function getStaff(hid) { return JSON.parse(localStorage.getItem('sarvam_staff_' + hid) || '[]'); }
+    function saveStaff(hid, s) { localStorage.setItem('sarvam_staff_' + hid, JSON.stringify(s)); }
+    function getVisits(hid) { return JSON.parse(localStorage.getItem('sarvam_visits_' + hid) || '[]'); }
+    function saveVisits(hid, v) { localStorage.setItem('sarvam_visits_' + hid, JSON.stringify(v)); }
+
+    window.onload = () => {
+      const stored = localStorage.getItem('sarvam_current_hospital');
+      if (!stored) { window.location.href = 'admin-login.html'; return; }
+      hospital = JSON.parse(stored);
+      renderHospital();
+      renderAll();
+    };
+
+    function renderHospital() {
+      document.getElementById('h-name').textContent = hospital.hospital_name;
+      document.getElementById('h-addr').textContent = `${hospital.address}, ${hospital.city}, ${hospital.state}`;
+      document.getElementById('h-contact').textContent = `📞 ${hospital.phone} · 📧 ${hospital.gmail}`;
+      document.getElementById('h-uid').textContent = hospital.unique_hospital_id || 'Pending';
+    }
+
+    function renderAll() {
+      const docs = getDoctors().filter(d => d.hospital_id === hospital.unique_hospital_id);
+      const pending = docs.filter(d => d.status === 'pending');
+      const approved = docs.filter(d => d.status === 'approved');
+      const staff = getStaff(hospital.id);
+      const visits = getVisits(hospital.id);
+      document.getElementById('st-pending').textContent = pending.length;
+      document.getElementById('st-approved').textContent = approved.length;
+      document.getElementById('st-staff').textContent = staff.length;
+      document.getElementById('st-visits').textContent = visits.length;
+
+      // Pending doctors
+      const pendingEl = document.getElementById('pending-section');
+      if (pending.length) {
+        pendingEl.innerHTML = `<div class="sec-head" style="color:#f59e0b">⏳ Pending Approvals (${pending.length})</div>` + pending.map(d => `
+          <div class="doc-card pending">
+            <div><p>Dr. ${d.full_name}</p><small>${d.qualification} · ${d.specialization || '—'} · ${d.experience_years || 0} yrs</small><br><small>${d.email} · ${d.mobile}</small></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-approve" onclick="approveDoc('${d.id}')">✓ Approve</button>
+              <button class="btn-reject" onclick="rejectDoc('${d.id}')">✗ Reject</button>
+            </div>
+          </div>`).join('');
+      } else pendingEl.innerHTML = '';
+
+      // Approved doctors
+      document.getElementById('approved-list').innerHTML = approved.length ? approved.map(d => `
+        <div class="doc-card approved">
+          <div><p>Dr. ${d.full_name}</p><small>${d.qualification} · ID: ${d.unique_doctor_id || '—'}</small></div>
+        </div>`).join('') : '<p class="empty">No approved doctors yet.</p>';
+
+      // Staff
+      document.getElementById('staff-list').innerHTML = staff.length ? staff.map(s => `
+        <div class="staff-card"><p style="font-weight:600;font-size:14px">${s.name}</p><small style="color:#64748b">${s.role || '—'} · ${s.phone || '—'} · ${s.email || '—'} · Joined: ${s.joining_date || '—'}</small></div>`).join('') : '<p class="empty">No staff added yet.</p>';
+
+      // Visits
+      document.getElementById('visits-list').innerHTML = visits.length ? [...visits].reverse().map(v => `
+        <div class="visit-card"><p style="font-weight:600;font-size:14px">${v.patient_name} (Age: ${v.patient_age || '—'})</p><small style="color:#64748b">${v.date_visited || '—'} · ${v.reason || '—'} · Dr. ${v.doctor_name || '—'} · 📞 ${v.patient_phone || '—'}</small></div>`).join('') : '<p class="empty">No visit logs yet.</p>';
+    }
+
+    function approveDoc(id) {
+      const uid = 'DR-' + Date.now().toString(36).toUpperCase();
+      const doctors = getDoctors();
+      const idx = doctors.findIndex(d => d.id === id);
+      if (idx >= 0) { doctors[idx].status = 'approved'; doctors[idx].unique_doctor_id = uid; saveDoctors(doctors); }
+      toast(`✓ Doctor approved! ID: ${uid}`);
+      renderAll();
+    }
+
+    function rejectDoc(id) {
+      const doctors = getDoctors();
+      const idx = doctors.findIndex(d => d.id === id);
+      if (idx >= 0) { doctors[idx].status = 'rejected'; saveDoctors(doctors); }
+      toast('Doctor registration rejected.');
+      renderAll();
+    }
+
+    function addDoctorById() {
+      const docid = document.getElementById('add-docid').value.trim();
+      if (!docid) return;
+      const doctors = getDoctors();
+      const idx = doctors.findIndex(d => d.unique_doctor_id === docid);
+      if (idx < 0) { document.getElementById('add-err').textContent = 'Doctor ID not found.'; return; }
+      doctors[idx].hospital_id = hospital.unique_hospital_id;
+      doctors[idx].hospital_name = hospital.hospital_name;
+      doctors[idx].status = 'approved';
+      saveDoctors(doctors);
+      document.getElementById('add-docid').value = '';
+      document.getElementById('add-err').textContent = '';
+      toast(`✓ Dr. ${doctors[idx].full_name} added to your hospital.`);
+      renderAll();
+    }
+
+    function addStaff() {
+      const name = document.getElementById('s-name').value.trim();
+      if (!name) return;
+      const staff = getStaff(hospital.id);
+      staff.push({ name, role: document.getElementById('s-role').value.trim(), phone: document.getElementById('s-phone').value.trim(), email: document.getElementById('s-email').value.trim(), joining_date: document.getElementById('s-date').value });
+      saveStaff(hospital.id, staff);
+      ['s-name','s-role','s-phone','s-email','s-date'].forEach(id => document.getElementById(id).value = '');
+      toast('✓ Staff member added.');
+      renderAll();
+    }
+
+    function addVisit() {
+      const name = document.getElementById('v-name').value.trim();
+      if (!name) return;
+      const visits = getVisits(hospital.id);
+      visits.push({ patient_name: name, patient_age: document.getElementById('v-age').value, patient_phone: document.getElementById('v-phone').value.trim(), date_visited: document.getElementById('v-date').value, reason: document.getElementById('v-reason').value.trim(), doctor_name: document.getElementById('v-doctor').value.trim() });
+      saveVisits(hospital.id, visits);
+      ['v-name','v-age','v-phone','v-date','v-reason','v-doctor'].forEach(id => document.getElementById(id).value = '');
+      toast('✓ Visit log added.');
+      renderAll();
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      const map = { doctors: 0, 'add-doctor': 1, staff: 2, visits: 3 };
+      document.querySelectorAll('.tab')[map[name]].classList.add('active');
+      document.getElementById('panel-' + name).classList.add('active');
+    }
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    function logout() { localStorage.removeItem('sarvam_current_hospital'); window.location.href = 'index.html'; }
+  </script>
+</body>
+</html>

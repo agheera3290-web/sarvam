@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Login - SARVAM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; background: linear-gradient(135deg, #0a0f1e, #0d1b3e); font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .box { background: #0d1b3e; border: 1px solid #1e3a5f; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .back { background: none; border: none; color: #64748b; cursor: pointer; font-size: 14px; margin-bottom: 24px; display: block; }
+    .back:hover { color: #94a3b8; }
+    .head { text-align: center; margin-bottom: 30px; }
+    .head .icon { font-size: 44px; margin-bottom: 12px; }
+    .head h2 { font-size: 24px; font-weight: 700; color: #e2e8f0; }
+    .head p { color: #64748b; font-size: 13px; margin-top: 6px; }
+    input, select { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid #1e3a5f; background: #0a0f1e; color: #fff; font-size: 15px; outline: none; margin-bottom: 12px; font-family: inherit; }
+    select option { background: #0a0f1e; }
+    .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, #0066ff, #0044cc); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px; font-family: inherit; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn-outline { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #1e3a5f; background: transparent; color: #94a3b8; font-size: 14px; cursor: pointer; margin-top: 8px; font-family: inherit; }
+    .err { color: #ef4444; font-size: 13px; margin-bottom: 10px; }
+    .note { color: #00ccaa; font-size: 13px; margin-bottom: 16px; text-align: center; }
+    .step { display: none; }
+    .step.active { display: block; }
+    .label { color: #64748b; font-size: 12px; margin-bottom: 4px; display: block; }
+    .otp-info { background: rgba(0,102,255,0.08); border: 1px solid rgba(0,102,255,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; font-size: 13px; color: #94a3b8; text-align: center; }
+    .pending-box { text-align: center; padding: 20px 0; }
+    .pending-box .big { font-size: 60px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <button class="back" onclick="window.location.href='index.html'">← Back to Home</button>
+    <div class="head">
+      <div class="icon">👤</div>
+      <h2>Patient Login</h2>
+      <p>Access your health records & QR card</p>
+    </div>
+
+    <!-- Step 1: Enter email -->
+    <div class="step active" id="step-entry">
+      <input type="email" id="email" placeholder="Email address *" />
+      <input type="tel" id="mobile" placeholder="Mobile number (optional)" />
+      <div class="err" id="err-entry"></div>
+      <button class="btn" onclick="sendOTP()">Send OTP</button>
+    </div>
+
+    <!-- Step 2: OTP -->
+    <div class="step" id="step-otp">
+      <div class="otp-info" id="otp-info-text"></div>
+      <input type="text" id="otp-input" placeholder="Enter 6-digit OTP" maxlength="6" />
+      <div class="err" id="err-otp"></div>
+      <button class="btn" onclick="verifyOTP()">Verify OTP</button>
+      <button class="btn-outline" onclick="sendOTP()">Resend OTP</button>
+    </div>
+
+    <!-- Step 3: Register -->
+    <div class="step" id="step-register">
+      <p class="note">🎉 New here! Create your Health Profile</p>
+      <input type="text" id="reg-name" placeholder="Full Name *" />
+      <input type="number" id="reg-age" placeholder="Age *" />
+      <select id="reg-blood">
+        <option value="">Select Blood Group *</option>
+        <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+        <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+      </select>
+      <input type="tel" id="reg-mobile" placeholder="Mobile Number" />
+      <input type="tel" id="reg-emergency" placeholder="Emergency Contact" />
+      <input type="text" id="reg-address" placeholder="Address" />
+      <input type="text" id="reg-abha" placeholder="ABHA ID (optional)" />
+      <input type="password" id="reg-password" placeholder="Set Detailed Access Password *" />
+      <div class="err" id="err-reg"></div>
+      <button class="btn" onclick="registerPatient()">Create Health Profile</button>
+    </div>
+
+    <!-- Step 4: Dashboard redirect -->
+    <div class="step" id="step-done">
+      <div class="pending-box">
+        <div class="big">✅</div>
+        <h3 style="color:#00ccaa;margin-bottom:8px">Login Successful!</h3>
+        <p style="color:#64748b;font-size:14px;margin-bottom:20px">Opening your health dashboard...</p>
+        <button class="btn" onclick="window.location.href='patient-dashboard.html'">Open Dashboard →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let generatedOTP = '';
+    let foundPatient = null;
+
+    // Simulated patient DB using localStorage
+    function getPatients() { return JSON.parse(localStorage.getItem('sarvam_patients') || '[]'); }
+    function savePatients(p) { localStorage.setItem('sarvam_patients', JSON.stringify(p)); }
+    function genPasskey() { return Math.random().toString(36).substring(2,8).toUpperCase(); }
+    function genOTP() { return Math.floor(100000 + Math.random() * 900000).toString(); }
+
+    function show(id) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function sendOTP() {
+      const email = document.getElementById('email').value.trim();
+      if (!email) { document.getElementById('err-entry').textContent = 'Please enter your email.'; return; }
+      document.getElementById('err-entry').textContent = '';
+      generatedOTP = genOTP();
+      const patients = getPatients();
+      foundPatient = patients.find(p => p.email === email) || null;
+      document.getElementById('otp-info-text').textContent = `OTP sent to ${email} — Demo OTP: ${generatedOTP}`;
+      alert(`📧 OTP for ${email}:\n\n${generatedOTP}\n\n(In production this would be sent by email)`);
+      show('step-otp');
+    }
+
+    function verifyOTP() {
+      const entered = document.getElementById('otp-input').value.trim();
+      if (entered !== generatedOTP) { document.getElementById('err-otp').textContent = 'Invalid OTP. Try again.'; return; }
+      document.getElementById('err-otp').textContent = '';
+      if (foundPatient) {
+        localStorage.setItem('sarvam_current_patient', JSON.stringify(foundPatient));
+        show('step-done');
+      } else {
+        const email = document.getElementById('email').value.trim();
+        document.getElementById('reg-mobile').value = document.getElementById('mobile').value;
+        show('step-register');
+      }
+    }
+
+    function registerPatient() {
+      const name = document.getElementById('reg-name').value.trim();
+      const age = document.getElementById('reg-age').value.trim();
+      const blood = document.getElementById('reg-blood').value;
+      const password = document.getElementById('reg-password').value.trim();
+      if (!name || !age || !blood || !password) { document.getElementById('err-reg').textContent = 'Please fill all required fields.'; return; }
+      const patient = {
+        id: 'PAT-' + Date.now(),
+        full_name: name,
+        age: parseInt(age),
+        blood_group: blood,
+        email: document.getElementById('email').value.trim(),
+        mobile: document.getElementById('reg-mobile').value.trim(),
+        emergency_contact: document.getElementById('reg-emergency').value.trim(),
+        address: document.getElementById('reg-address').value.trim(),
+        abha_id: document.getElementById('reg-abha').value.trim(),
+        detailed_password: password,
+        basic_passkey: genPasskey(),
+        is_premium: false,
+        qr_code: 'SARVAM-' + Date.now(),
+        prescriptions: [],
+        lab_reports: [],
+        hospital_visits: [],
+        chronic_diseases: []
+      };
+      const patients = getPatients();
+      patients.push(patient);
+      savePatients(patients);
+      localStorage.setItem('sarvam_current_patient', JSON.stringify(patient));
+      document.getElementById('err-reg').textContent = '';
+      show('step-done');
+    }
+  </script>
+</body>
+</html>

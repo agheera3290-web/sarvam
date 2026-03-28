@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login - SARVAM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; background: linear-gradient(135deg, #0a0f1e, #0d1b3e); font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .box { background: #0d1b3e; border: 1px solid #1e3a5f; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 450px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .back { background: none; border: none; color: #64748b; cursor: pointer; font-size: 14px; margin-bottom: 24px; display: block; }
+    .head { text-align: center; margin-bottom: 30px; }
+    input { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid #1e3a5f; background: #0a0f1e; color: #fff; font-size: 15px; outline: none; margin-bottom: 12px; font-family: inherit; }
+    .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, #7c3aed, #0066ff); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px; font-family: inherit; }
+    .btn-outline { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #1e3a5f; background: transparent; color: #94a3b8; font-size: 14px; cursor: pointer; margin-top: 8px; font-family: inherit; }
+    .err { color: #ef4444; font-size: 13px; margin-bottom: 10px; }
+    .step { display: none; }
+    .step.active { display: block; }
+    .link { color: #7c3aed; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <button class="back" onclick="window.location.href='index.html'">← Back to Home</button>
+    <div class="head">
+      <div style="font-size:44px;margin-bottom:12px">🏥</div>
+      <h2 style="font-size:24px;font-weight:700;color:#e2e8f0">Hospital Admin Login</h2>
+      <p style="color:#64748b;font-size:13px;margin-top:6px">Register or manage your hospital on SARVAM</p>
+    </div>
+
+    <!-- Login -->
+    <div class="step active" id="step-login">
+      <input type="email" id="login-email" placeholder="Hospital Gmail" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <div class="err" id="err-login"></div>
+      <button class="btn" onclick="handleLogin()">Login</button>
+      <p style="text-align:center;color:#64748b;font-size:13px;margin-top:16px">New hospital? <span class="link" onclick="show('step-register')">Register here</span></p>
+    </div>
+
+    <!-- Register -->
+    <div class="step" id="step-register">
+      <p style="color:#7c3aed;font-size:13px;margin-bottom:16px;text-align:center">📋 Register — Developer will review and approve</p>
+      <input type="text" id="reg-name" placeholder="Hospital Name *" />
+      <input type="email" id="reg-gmail" placeholder="Hospital Gmail *" />
+      <input type="tel" id="reg-phone" placeholder="Phone *" />
+      <input type="text" id="reg-address" placeholder="Address *" />
+      <input type="text" id="reg-city" placeholder="City *" />
+      <input type="text" id="reg-state" placeholder="State *" />
+      <input type="password" id="reg-password" placeholder="Set Password *" />
+      <div id="otp-section" style="display:none">
+        <p style="color:#94a3b8;font-size:13px;margin-bottom:8px" id="otp-note"></p>
+        <input type="text" id="otp-input" placeholder="Enter OTP" />
+        <button class="btn-outline" onclick="sendOTP()" style="margin-bottom:10px">Resend OTP</button>
+        <div class="err" id="err-reg"></div>
+        <button class="btn" onclick="handleRegister()">Submit for Approval</button>
+      </div>
+      <div id="pre-otp-section">
+        <div class="err" id="err-pre"></div>
+        <button class="btn" onclick="sendOTP()">Get OTP to Verify Gmail</button>
+      </div>
+      <button class="btn-outline" onclick="show('step-login')" style="margin-top:8px">Already registered? Login</button>
+    </div>
+
+    <!-- Pending -->
+    <div class="step" id="step-pending">
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:60px;margin-bottom:16px">⏳</div>
+        <h3 style="color:#e2e8f0;margin-bottom:10px">Under Review</h3>
+        <p style="color:#64748b;font-size:14px;line-height:1.8">Your hospital is being reviewed by <strong style="color:#7c3aed">SARVAM Developer</strong>. You'll receive your unique Hospital ID once approved.</p>
+        <button onclick="window.location.href='index.html'" style="margin-top:24px;padding:12px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.05);color:#94a3b8;cursor:pointer;font-family:inherit">Back to Home</button>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div class="step" id="step-done">
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:60px;margin-bottom:16px">✅</div>
+        <h3 style="color:#7c3aed;margin-bottom:8px">Login Successful!</h3>
+        <button onclick="window.location.href='admin-dashboard.html'" style="width:100%;margin-top:16px;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#7c3aed,#0066ff);color:#fff;font-weight:700;cursor:pointer;font-family:inherit;font-size:15px">Open Admin Dashboard →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let generatedOTP = '';
+    function getHospitals() { return JSON.parse(localStorage.getItem('sarvam_hospitals') || '[]'); }
+    function saveHospitals(h) { localStorage.setItem('sarvam_hospitals', JSON.stringify(h)); }
+    function show(id) { document.querySelectorAll('.step').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+    function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-password').value.trim();
+      if (!email || !pass) { document.getElementById('err-login').textContent = 'Enter email and password.'; return; }
+      const hospitals = getHospitals();
+      const h = hospitals.find(x => x.gmail === email);
+      if (!h) { document.getElementById('err-login').textContent = 'Hospital not found. Please register.'; return; }
+      if (h.status === 'pending') { show('step-pending'); return; }
+      if (h.status === 'rejected') { document.getElementById('err-login').textContent = 'Registration was rejected.'; return; }
+      if (h.password !== pass) { document.getElementById('err-login').textContent = 'Invalid password.'; return; }
+      localStorage.setItem('sarvam_current_hospital', JSON.stringify(h));
+      show('step-done');
+    }
+
+    function sendOTP() {
+      const gmail = document.getElementById('reg-gmail').value.trim();
+      const name = document.getElementById('reg-name').value.trim();
+      const pass = document.getElementById('reg-password').value.trim();
+      if (!name || !gmail || !pass) { document.getElementById('err-pre').textContent = 'Fill hospital name, Gmail and password first.'; return; }
+      document.getElementById('err-pre').textContent = '';
+      generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      document.getElementById('otp-note').textContent = `OTP sent to ${gmail}`;
+      document.getElementById('pre-otp-section').style.display = 'none';
+      document.getElementById('otp-section').style.display = 'block';
+      alert(`📧 OTP for ${gmail}:\n\n${generatedOTP}\n\n(In production this would be sent by email)`);
+    }
+
+    function handleRegister() {
+      const otp = document.getElementById('otp-input').value.trim();
+      if (otp !== generatedOTP) { document.getElementById('err-reg').textContent = 'Invalid OTP.'; return; }
+      const hosp = {
+        id: 'HOSP-' + Date.now(),
+        hospital_name: document.getElementById('reg-name').value.trim(),
+        gmail: document.getElementById('reg-gmail').value.trim(),
+        phone: document.getElementById('reg-phone').value.trim(),
+        address: document.getElementById('reg-address').value.trim(),
+        city: document.getElementById('reg-city').value.trim(),
+        state: document.getElementById('reg-state').value.trim(),
+        password: document.getElementById('reg-password').value.trim(),
+        status: 'pending',
+        unique_hospital_id: ''
+      };
+      const hospitals = getHospitals();
+      hospitals.push(hosp);
+      saveHospitals(hospitals);
+      document.getElementById('err-reg').textContent = '';
+      show('step-pending');
+    }
+  </script>
+</body>
+</html>

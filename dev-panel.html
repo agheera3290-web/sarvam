@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dev Panel - SARVAM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; background: linear-gradient(135deg, #0a0f1e, #1a0a2e); font-family: 'Segoe UI', sans-serif; color: #fff; }
+    nav { background: rgba(10,5,20,0.97); border-bottom: 1px solid #2d1b4e; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .brand { background: linear-gradient(90deg, #7c3aed, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 22px; letter-spacing: 4px; }
+    .dev-badge { padding: 4px 12px; border-radius: 20px; background: rgba(124,58,237,0.2); border: 1px solid #7c3aed55; color: #a78bfa; font-size: 12px; font-weight: 700; margin-left: 10px; }
+    .btn-sm { padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; font-family: inherit; border: 1px solid #2d1b4e; background: transparent; color: #94a3b8; }
+    main { max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px,1fr)); gap: 12px; margin-bottom: 28px; }
+    .stat { background: rgba(124,58,237,0.05); border: 1px solid #2d1b4e; border-radius: 12px; padding: 18px 14px; text-align: center; }
+    .stat .num { font-size: 32px; font-weight: 800; }
+    .stat .lbl { font-size: 11px; color: #64748b; margin-top: 5px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .tab { padding: 10px 24px; border-radius: 20px; border: none; background: rgba(255,255,255,0.04); color: #94a3b8; cursor: pointer; font-family: inherit; font-size: 14px; }
+    .tab.active { background: linear-gradient(135deg, #7c3aed, #ec4899); color: #fff; font-weight: 700; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 14px; }
+    .card { background: rgba(255,255,255,0.02); border: 1px solid #2d1b4e; border-radius: 14px; padding: 18px; }
+    .card p { margin: 0; font-weight: 700; font-size: 15px; }
+    .card small { color: #64748b; font-size: 12px; }
+    .card.pending { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.04); }
+    .card.approved-h { border-color: rgba(0,204,170,0.2); background: rgba(0,204,170,0.02); }
+    .sec-head { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+    .btn-approve { padding: 8px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, #00ccaa, #0066ff); color: #fff; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; }
+    .btn-reject { padding: 8px 16px; border-radius: 8px; border: 1px solid #ef4444; background: transparent; color: #ef4444; cursor: pointer; font-family: inherit; font-size: 13px; }
+    .btn-toggle { padding: 6px 14px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 12px; margin-top: 8px; }
+    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; display: inline-block; margin-top: 6px; }
+    .s-pending { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .s-approved { background: rgba(0,204,170,0.1); color: #00ccaa; }
+    .s-rejected { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .s-premium { background: rgba(255,215,0,0.1); color: gold; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: rgba(124,58,237,0.95); color: #fff; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; display: none; z-index: 999; }
+    .empty { color: #4a5568; font-size: 13px; padding: 12px 0; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div style="display:flex;align-items:center">
+      <span class="brand">SARVAM</span>
+      <span class="dev-badge">DEV PANEL</span>
+    </div>
+    <button class="btn-sm" onclick="window.location.href='index.html'">Exit Dev Panel</button>
+  </nav>
+  <main>
+    <div class="stats">
+      <div class="stat"><div class="num" id="st-hosp" style="color:#7c3aed">0</div><div class="lbl">Total Hospitals</div></div>
+      <div class="stat"><div class="num" id="st-pending-h" style="color:#f59e0b">0</div><div class="lbl">Pending</div></div>
+      <div class="stat"><div class="num" id="st-active-h" style="color:#00ccaa">0</div><div class="lbl">Active Hospitals</div></div>
+      <div class="stat"><div class="num" id="st-docs" style="color:#0066ff">0</div><div class="lbl">Total Doctors</div></div>
+      <div class="stat"><div class="num" id="st-pats" style="color:#ec4899">0</div><div class="lbl">Total Patients</div></div>
+      <div class="stat"><div class="num" id="st-premium" style="color:gold">0</div><div class="lbl">Premium Patients</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('hospitals')">🏥 Hospitals</button>
+      <button class="tab" onclick="switchTab('doctors')">👨‍⚕️ Doctors</button>
+      <button class="tab" onclick="switchTab('patients')">👤 Patients</button>
+    </div>
+
+    <div class="panel active" id="panel-hospitals">
+      <div id="pending-hosps" style="margin-bottom:24px"></div>
+      <div class="sec-head" style="color:#00ccaa">✓ Approved Hospitals</div>
+      <div class="grid" id="approved-hosps"></div>
+    </div>
+    <div class="panel" id="panel-doctors">
+      <div class="grid" id="docs-grid"></div>
+    </div>
+    <div class="panel" id="panel-patients">
+      <div class="grid" id="pats-grid"></div>
+    </div>
+  </main>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function getHospitals() { return JSON.parse(localStorage.getItem('sarvam_hospitals') || '[]'); }
+    function saveHospitals(h) { localStorage.setItem('sarvam_hospitals', JSON.stringify(h)); }
+    function getDoctors() { return JSON.parse(localStorage.getItem('sarvam_doctors') || '[]'); }
+    function getPatients() { return JSON.parse(localStorage.getItem('sarvam_patients') || '[]'); }
+    function savePatients(p) { localStorage.setItem('sarvam_patients', JSON.stringify(p)); }
+
+    function renderAll() {
+      const hospitals = getHospitals();
+      const doctors = getDoctors();
+      const patients = getPatients();
+      const pending = hospitals.filter(h => h.status === 'pending');
+      const approved = hospitals.filter(h => h.status === 'approved');
+      const premium = patients.filter(p => p.is_premium);
+
+      document.getElementById('st-hosp').textContent = hospitals.length;
+      document.getElementById('st-pending-h').textContent = pending.length;
+      document.getElementById('st-active-h').textContent = approved.length;
+      document.getElementById('st-docs').textContent = doctors.length;
+      document.getElementById('st-pats').textContent = patients.length;
+      document.getElementById('st-premium').textContent = premium.length;
+
+      // Pending hospitals
+      const pendEl = document.getElementById('pending-hosps');
+      if (pending.length) {
+        pendEl.innerHTML = `<div class="sec-head" style="color:#f59e0b">⏳ Pending Hospital Approvals (${pending.length})</div><div class="grid">` + pending.map(h => `
+          <div class="card pending">
+            <p>${h.hospital_name}</p>
+            <small>${h.address}, ${h.city}, ${h.state}</small><br>
+            <small>📧 ${h.gmail} · 📞 ${h.phone}</small>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn-approve" onclick="approveHospital('${h.id}')">✓ Approve</button>
+              <button class="btn-reject" onclick="rejectHospital('${h.id}')">✗ Reject</button>
+            </div>
+          </div>`).join('') + '</div>';
+      } else pendEl.innerHTML = '';
+
+      // Approved hospitals
+      document.getElementById('approved-hosps').innerHTML = approved.length ? approved.map(h => `
+        <div class="card approved-h">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <p>${h.hospital_name}</p>
+            <span style="color:#7c3aed;font-weight:800;font-size:14px">${h.unique_hospital_id}</span>
+          </div>
+          <small>${h.city}, ${h.state} · ${h.gmail}</small>
+        </div>`).join('') : '<p class="empty">No approved hospitals.</p>';
+
+      // Doctors
+      document.getElementById('docs-grid').innerHTML = doctors.length ? doctors.map(d => `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <p>Dr. ${d.full_name}</p>
+            <span class="status-badge s-${d.status}">${d.status}</span>
+          </div>
+          <small>${d.qualification} · ${d.specialization || '—'}</small><br>
+          <small>${d.hospital_name || '—'} · ${d.email}</small>
+          ${d.unique_doctor_id ? `<br><small style="color:#7c3aed;font-weight:600">ID: ${d.unique_doctor_id}</small>` : ''}
+        </div>`).join('') : '<p class="empty">No doctors registered.</p>';
+
+      // Patients
+      document.getElementById('pats-grid').innerHTML = patients.length ? patients.map(p => `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <p>${p.full_name}</p>
+            ${p.is_premium ? '<span class="status-badge s-premium">⭐ Premium</span>' : ''}
+          </div>
+          <small>${p.email} · Age: ${p.age} · ${p.blood_group}</small><br>
+          <small style="color:#4a5568">QR: ${p.qr_code}</small>
+          <br><button class="btn-toggle ${p.is_premium ? 'btn-reject' : 'btn-approve'}" onclick="togglePremium('${p.id}')" style="background:${p.is_premium?'rgba(239,68,68,0.1)':'rgba(255,215,0,0.1)'};border:1px solid ${p.is_premium?'#ef4444':'gold'};color:${p.is_premium?'#ef4444':'gold'}">${p.is_premium ? 'Remove Premium' : '⭐ Grant Premium'}</button>
+        </div>`).join('') : '<p class="empty">No patients registered.</p>';
+    }
+
+    function approveHospital(id) {
+      const hospitals = getHospitals();
+      const idx = hospitals.findIndex(h => h.id === id);
+      if (idx < 0) return;
+      const uid = 'SARVAM-' + Date.now().toString(36).toUpperCase();
+      hospitals[idx].status = 'approved';
+      hospitals[idx].unique_hospital_id = uid;
+      saveHospitals(hospitals);
+      toast(`✓ ${hospitals[idx].hospital_name} approved! ID: ${uid}`);
+      renderAll();
+    }
+
+    function rejectHospital(id) {
+      const hospitals = getHospitals();
+      const idx = hospitals.findIndex(h => h.id === id);
+      if (idx >= 0) { hospitals[idx].status = 'rejected'; saveHospitals(hospitals); }
+      toast('Hospital rejected.');
+      renderAll();
+    }
+
+    function togglePremium(id) {
+      const patients = getPatients();
+      const idx = patients.findIndex(p => p.id === id);
+      if (idx >= 0) { patients[idx].is_premium = !patients[idx].is_premium; savePatients(patients); }
+      toast(`Premium ${patients[idx].is_premium ? 'granted' : 'removed'}.`);
+      renderAll();
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      const map = { hospitals: 0, doctors: 1, patients: 2 };
+      document.querySelectorAll('.tab')[map[name]].classList.add('active');
+      document.getElementById('panel-' + name).classList.add('active');
+    }
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 3500);
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>

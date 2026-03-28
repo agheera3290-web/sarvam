@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Login - SARVAM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; background: linear-gradient(135deg, #0a0f1e, #0d1b3e); font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .box { background: #0d1b3e; border: 1px solid #1e3a5f; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 450px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .back { background: none; border: none; color: #64748b; cursor: pointer; font-size: 14px; margin-bottom: 24px; display: block; }
+    .head { text-align: center; margin-bottom: 30px; }
+    .head .icon { font-size: 44px; margin-bottom: 12px; }
+    .head h2 { font-size: 24px; font-weight: 700; color: #e2e8f0; }
+    .head p { color: #64748b; font-size: 13px; margin-top: 6px; }
+    input, select { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid #1e3a5f; background: #0a0f1e; color: #fff; font-size: 15px; outline: none; margin-bottom: 12px; font-family: inherit; }
+    .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, #00ccaa, #0066ff); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px; font-family: inherit; }
+    .btn-outline { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #1e3a5f; background: transparent; color: #94a3b8; font-size: 14px; cursor: pointer; margin-top: 8px; font-family: inherit; }
+    .err { color: #ef4444; font-size: 13px; margin-bottom: 10px; }
+    .note { color: #00ccaa; font-size: 13px; margin-bottom: 16px; text-align: center; }
+    .step { display: none; }
+    .step.active { display: block; }
+    .pending-box { text-align: center; padding: 20px 0; }
+    .link { color: #00ccaa; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <button class="back" onclick="window.location.href='index.html'">← Back to Home</button>
+    <div class="head">
+      <div class="icon">🩺</div>
+      <h2>Doctor Login</h2>
+      <p>Connect with your hospital on SARVAM</p>
+    </div>
+
+    <!-- Login -->
+    <div class="step active" id="step-login">
+      <input type="email" id="login-email" placeholder="Email address" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <div class="err" id="err-login"></div>
+      <button class="btn" onclick="handleLogin()">Login</button>
+      <p style="text-align:center;color:#64748b;font-size:13px;margin-top:16px">New doctor? <span class="link" onclick="show('step-register')">Register here</span></p>
+    </div>
+
+    <!-- Register -->
+    <div class="step" id="step-register">
+      <p class="note">📋 Register — request goes to hospital admin for approval</p>
+      <input type="text" id="reg-name" placeholder="Full Name *" />
+      <input type="email" id="reg-email" placeholder="Email *" />
+      <input type="tel" id="reg-mobile" placeholder="Mobile *" />
+      <input type="number" id="reg-age" placeholder="Age" />
+      <input type="number" id="reg-exp" placeholder="Years of Experience" />
+      <input type="text" id="reg-qual" placeholder="Qualification (MBBS, MD...) *" />
+      <input type="text" id="reg-spec" placeholder="Specialization" />
+      <input type="text" id="reg-hospid" placeholder="Hospital Unique ID * (get from admin)" />
+      <input type="text" id="reg-addr" placeholder="Current Address" />
+      <div class="err" id="err-reg"></div>
+      <button class="btn" onclick="handleRegister()">Submit Registration</button>
+      <button class="btn-outline" onclick="show('step-login')">Already registered? Login</button>
+    </div>
+
+    <!-- Set Password (after approval) -->
+    <div class="step" id="step-setpass">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:44px;margin-bottom:12px">🎉</div>
+        <p style="color:#00ccaa;font-size:15px;font-weight:600">You've been approved!</p>
+        <p style="color:#64748b;font-size:13px;margin-top:6px">Doctor ID: <strong style="color:#0066ff" id="approved-docid">—</strong></p>
+      </div>
+      <input type="password" id="new-password" placeholder="Set your password (min 6 chars)" />
+      <div class="err" id="err-setpass"></div>
+      <button class="btn" onclick="setPassword()">Set Password & Enter Dashboard</button>
+    </div>
+
+    <!-- Pending -->
+    <div class="step" id="step-pending">
+      <div class="pending-box">
+        <div style="font-size:60px;margin-bottom:16px">⏳</div>
+        <h3 style="color:#e2e8f0;margin-bottom:10px">Approval Pending</h3>
+        <p style="color:#64748b;font-size:14px;line-height:1.8">Your registration has been sent to <strong style="color:#00ccaa">hospital admin</strong> for approval. Once approved, you can set your password and login.</p>
+        <button onclick="window.location.href='index.html'" style="margin-top:24px;padding:12px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.05);color:#94a3b8;cursor:pointer;font-family:inherit;font-size:14px">Back to Home</button>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div class="step" id="step-done">
+      <div class="pending-box">
+        <div style="font-size:60px;margin-bottom:16px">✅</div>
+        <h3 style="color:#00ccaa;margin-bottom:8px">Login Successful!</h3>
+        <p style="color:#64748b;font-size:14px;margin-bottom:20px">Opening your doctor dashboard...</p>
+        <button onclick="window.location.href='doctor-dashboard.html'" style="width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#00ccaa,#0066ff);color:#fff;font-weight:700;cursor:pointer;font-family:inherit;font-size:15px">Open Dashboard →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let pendingDoc = null;
+
+    function getDoctors() { return JSON.parse(localStorage.getItem('sarvam_doctors') || '[]'); }
+    function saveDoctors(d) { localStorage.setItem('sarvam_doctors', JSON.stringify(d)); }
+    function getHospitals() { return JSON.parse(localStorage.getItem('sarvam_hospitals') || '[]'); }
+    function show(id) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-password').value.trim();
+      if (!email || !pass) { document.getElementById('err-login').textContent = 'Enter email and password.'; return; }
+      const doctors = getDoctors();
+      const doc = doctors.find(d => d.email === email);
+      if (!doc) { document.getElementById('err-login').textContent = 'Doctor not found. Please register.'; return; }
+      if (doc.status === 'pending') { show('step-pending'); return; }
+      if (doc.status === 'rejected') { document.getElementById('err-login').textContent = 'Registration was rejected by admin.'; return; }
+      if (!doc.password) { pendingDoc = doc; document.getElementById('approved-docid').textContent = doc.unique_doctor_id || '—'; show('step-setpass'); return; }
+      if (doc.password !== pass) { document.getElementById('err-login').textContent = 'Invalid password.'; return; }
+      localStorage.setItem('sarvam_current_doctor', JSON.stringify(doc));
+      show('step-done');
+    }
+
+    function handleRegister() {
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const qual = document.getElementById('reg-qual').value.trim();
+      const hospid = document.getElementById('reg-hospid').value.trim();
+      if (!name || !email || !qual || !hospid) { document.getElementById('err-reg').textContent = 'Fill all required fields.'; return; }
+      const hospitals = getHospitals();
+      const hosp = hospitals.find(h => h.unique_hospital_id === hospid);
+      if (!hosp) { document.getElementById('err-reg').textContent = 'Hospital ID not found. Ask your admin.'; return; }
+      if (hosp.status !== 'approved') { document.getElementById('err-reg').textContent = 'This hospital is not yet approved on SARVAM.'; return; }
+      const doc = {
+        id: 'DOC-' + Date.now(),
+        full_name: name, email, mobile: document.getElementById('reg-mobile').value.trim(),
+        age: parseInt(document.getElementById('reg-age').value) || 0,
+        experience_years: parseInt(document.getElementById('reg-exp').value) || 0,
+        qualification: qual, specialization: document.getElementById('reg-spec').value.trim(),
+        hospital_id: hospid, hospital_name: hosp.hospital_name,
+        current_address: document.getElementById('reg-addr').value.trim(),
+        status: 'pending', password: '', unique_doctor_id: ''
+      };
+      const doctors = getDoctors();
+      doctors.push(doc);
+      saveDoctors(doctors);
+      document.getElementById('err-reg').textContent = '';
+      show('step-pending');
+    }
+
+    function setPassword() {
+      const pass = document.getElementById('new-password').value.trim();
+      if (!pass || pass.length < 6) { document.getElementById('err-setpass').textContent = 'Password must be at least 6 characters.'; return; }
+      const doctors = getDoctors();
+      const idx = doctors.findIndex(d => d.id === pendingDoc.id);
+      if (idx >= 0) { doctors[idx].password = pass; saveDoctors(doctors); }
+      pendingDoc.password = pass;
+      localStorage.setItem('sarvam_current_doctor', JSON.stringify(pendingDoc));
+      show('step-done');
+    }
+  </script>
+</body>
+</html>

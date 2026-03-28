@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Dashboard - SARVAM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; background: linear-gradient(135deg, #0a0f1e, #0d1b3e); font-family: 'Segoe UI', sans-serif; color: #fff; }
+    nav { background: rgba(13,27,62,0.95); border-bottom: 1px solid #1e3a5f; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+    .brand { background: linear-gradient(90deg, #0066ff, #00ccaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 22px; letter-spacing: 4px; }
+    .nav-right { display: flex; gap: 10px; align-items: center; }
+    .btn-sm { padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; font-family: inherit; }
+    .btn-upgrade { border: 1px solid gold; background: rgba(255,215,0,0.08); color: gold; }
+    .btn-logout { border: 1px solid #1e3a5f; background: transparent; color: #94a3b8; }
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+    .profile-card { background: linear-gradient(135deg, rgba(0,102,255,0.1), rgba(0,204,170,0.07)); border: 1px solid #1e3a5f; border-radius: 20px; padding: 24px 28px; display: flex; gap: 20px; align-items: center; margin-bottom: 28px; flex-wrap: wrap; }
+    .avatar { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #0066ff, #00ccaa); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+    .profile-info h2 { font-size: 22px; margin-bottom: 8px; }
+    .tags { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tag { padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); font-size: 12px; color: #94a3b8; }
+    .tag.blood { color: #ef4444; }
+    .tag.premium { background: rgba(255,215,0,0.1); color: gold; }
+    .btn-qr { padding: 12px 22px; border-radius: 12px; border: none; background: linear-gradient(135deg, #0066ff, #00ccaa); color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; margin-left: auto; font-size: 14px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .tab { padding: 10px 22px; border-radius: 20px; border: none; background: rgba(255,255,255,0.05); color: #94a3b8; cursor: pointer; font-family: inherit; font-size: 14px; transition: all 0.2s; }
+    .tab.active { background: linear-gradient(135deg, #0066ff, #00ccaa); color: #fff; font-weight: 700; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .card { background: rgba(255,255,255,0.02); border: 1px solid #1e3a5f; border-radius: 16px; padding: 20px; }
+    .card h3 { font-size: 14px; color: #64748b; margin-bottom: 14px; }
+    .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .row .lbl { color: #64748b; }
+    .row .val { color: #e2e8f0; font-weight: 500; }
+    .record-item { margin-bottom: 8px; padding: 10px 12px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+    .record-item p { font-size: 13px; color: #e2e8f0; }
+    .record-item small { font-size: 11px; color: #64748b; }
+    .empty { color: #4a5568; font-size: 13px; padding: 12px 0; }
+
+    /* QR Modal */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+    .overlay.show { display: flex; }
+    .qr-modal { background: #0d1b3e; border: 1px solid #1e3a5f; border-radius: 20px; padding: 28px; width: 100%; max-width: 380px; }
+    .qr-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .qr-modal-head h3 { color: #e2e8f0; font-size: 17px; }
+    .close-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 24px; }
+    .qr-card { background: linear-gradient(135deg, #0a0f1e, #0d1b3e); border: 2px solid #0066ff; border-radius: 16px; padding: 24px; text-align: center; }
+    .qr-brand { background: linear-gradient(90deg, #0066ff, #00ccaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 26px; font-weight: 900; letter-spacing: 6px; margin-bottom: 4px; }
+    .qr-sub { color: #4a5568; font-size: 10px; margin-bottom: 16px; }
+    #qr-canvas { border-radius: 8px; }
+    .qr-info { margin-top: 14px; background: rgba(0,102,255,0.08); border-radius: 10px; padding: 10px; }
+    .qr-info p { font-size: 14px; font-weight: 700; color: #e2e8f0; }
+    .qr-info small { font-size: 12px; color: #64748b; }
+    .passkey-section { margin-top: 12px; border-top: 1px dashed #1e3a5f; padding-top: 12px; }
+    .passkey-label { font-size: 10px; color: #64748b; letter-spacing: 2px; margin-bottom: 4px; }
+    .passkey { font-size: 28px; font-weight: 900; color: #0066ff; letter-spacing: 8px; }
+    .passkey-note { font-size: 9px; color: #2d3748; margin-top: 4px; }
+    .btn-print { width: 100%; margin-top: 14px; padding: 13px; border-radius: 10px; border: none; background: linear-gradient(135deg, #0066ff, #00ccaa); color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 15px; }
+
+    /* AI panel */
+    textarea { width: 100%; padding: 13px 16px; border-radius: 10px; border: 1px solid #1e3a5f; background: #0a0f1e; color: #fff; font-size: 14px; outline: none; min-height: 90px; resize: vertical; margin-bottom: 12px; font-family: inherit; }
+    .ai-btn { padding: 12px 28px; border-radius: 10px; border: none; background: linear-gradient(135deg, #0066ff, #00ccaa); color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 15px; }
+    .ai-response { margin-top: 18px; padding: 18px; background: rgba(0,204,170,0.05); border: 1px solid rgba(0,204,170,0.2); border-radius: 12px; font-size: 14px; line-height: 1.8; color: #e2e8f0; }
+    .premium-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .premium-item { background: rgba(255,215,0,0.03); border: 1px solid rgba(255,215,0,0.15); border-radius: 16px; padding: 22px; }
+    .premium-item h4 { color: #e2e8f0; margin-bottom: 6px; }
+    .premium-item p { color: #64748b; font-size: 13px; }
+
+    /* Upgrade modal */
+    .upgrade-modal { background: #0d1b3e; border: 1px solid #1e3a5f; border-radius: 20px; padding: 36px 28px; width: 100%; max-width: 340px; text-align: center; }
+    .upgrade-modal h3 { color: #e2e8f0; margin-bottom: 10px; font-size: 22px; }
+    .upgrade-modal p { color: #64748b; font-size: 14px; margin-bottom: 24px; line-height: 1.7; }
+    .upgrade-btns { display: flex; gap: 10px; }
+    .btn-later { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #1e3a5f; background: transparent; color: #94a3b8; cursor: pointer; font-family: inherit; }
+    .btn-gold { flex: 1; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(135deg, gold, #f59e0b); color: #0a0f1e; font-weight: 800; cursor: pointer; font-family: inherit; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="brand">SARVAM</div>
+    <div class="nav-right">
+      <button class="btn-sm btn-upgrade" id="upgradeBtn" onclick="showUpgrade()">⭐ Upgrade</button>
+      <button class="btn-sm btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <main>
+    <div class="profile-card">
+      <div class="avatar" id="patAvatar">P</div>
+      <div class="profile-info">
+        <h2 id="patName">Patient</h2>
+        <div class="tags" id="patTags"></div>
+      </div>
+      <button class="btn-qr" onclick="showQR()">📱 My Health QR</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('overview')">Overview</button>
+      <button class="tab" onclick="switchTab('records')">Records</button>
+      <button class="tab" onclick="switchTab('visits')">Visits</button>
+      <button class="tab premium-tab" onclick="switchTab('ai')">🤖 AI Assistant</button>
+      <button class="tab premium-tab" onclick="switchTab('premium')">⭐ Premium</button>
+    </div>
+
+    <!-- Overview -->
+    <div class="panel active" id="panel-overview">
+      <div class="grid2">
+        <div class="card">
+          <h3>📞 Contact Info</h3>
+          <div class="row"><span class="lbl">Email</span><span class="val" id="ov-email">—</span></div>
+          <div class="row"><span class="lbl">Mobile</span><span class="val" id="ov-mobile">—</span></div>
+          <div class="row"><span class="lbl">Emergency</span><span class="val" id="ov-emergency">—</span></div>
+          <div class="row"><span class="lbl">Address</span><span class="val" id="ov-address">—</span></div>
+        </div>
+        <div class="card">
+          <h3>🩸 Medical Info</h3>
+          <div class="row"><span class="lbl">Blood Group</span><span class="val" id="ov-blood">—</span></div>
+          <div class="row"><span class="lbl">Age</span><span class="val" id="ov-age">—</span></div>
+          <div class="row"><span class="lbl">ABHA ID</span><span class="val" id="ov-abha">—</span></div>
+          <div class="row"><span class="lbl">Chronic Diseases</span><span class="val" id="ov-chronic">None</span></div>
+        </div>
+        <div class="card">
+          <h3>💊 Recent Prescriptions</h3>
+          <div id="ov-prescriptions"><p class="empty">No prescriptions yet</p></div>
+        </div>
+        <div class="card">
+          <h3>🏥 Nearby Hospitals</h3>
+          <div id="ov-hospitals">
+            <div class="record-item"><p>City General Hospital</p><small>~1.2 km · Multi-specialty</small></div>
+            <div class="record-item"><p>Apollo Clinic</p><small>~3.5 km · Cardiology</small></div>
+            <div class="record-item"><p>Primary Health Center</p><small>~5.8 km · General</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Records -->
+    <div class="panel" id="panel-records">
+      <div class="grid2">
+        <div class="card">
+          <h3>🧪 Lab Reports</h3>
+          <div id="rec-labs"><p class="empty">No lab reports yet</p></div>
+        </div>
+        <div class="card">
+          <h3>💊 Prescriptions</h3>
+          <div id="rec-pres"><p class="empty">No prescriptions yet</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visits -->
+    <div class="panel" id="panel-visits">
+      <div class="card" style="max-width:700px">
+        <h3>🏥 Hospital Visit History</h3>
+        <div id="visits-list"><p class="empty">No visits recorded yet</p></div>
+      </div>
+    </div>
+
+    <!-- AI -->
+    <div class="panel" id="panel-ai">
+      <div class="card" style="max-width:680px">
+        <h3>🤖 AI Health Assistant <span style="color:#0066ff;font-size:11px;margin-left:8px">Premium</span></h3>
+        <p style="color:#64748b;font-size:13px;margin-bottom:16px">Ask about fever, cold, headache, stomachache, vomiting, or any symptoms...</p>
+        <textarea id="ai-query" placeholder="Describe your symptoms e.g. I have a fever of 101°F with body aches..."></textarea>
+        <button class="ai-btn" onclick="askAI()">Ask AI 🤖</button>
+        <div class="ai-response" id="ai-resp" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Premium -->
+    <div class="panel" id="panel-premium">
+      <div class="premium-grid">
+        <div class="premium-item"><div style="font-size:36px;margin-bottom:10px">💊</div><h4>Online Consultation</h4><p>Consult a doctor for ₹50 / 5 mins with prescription</p></div>
+        <div class="premium-item"><div style="font-size:36px;margin-bottom:10px">📍</div><h4>Nearby Doctors</h4><p>Find doctors within 5-10 km radius</p></div>
+        <div class="premium-item"><div style="font-size:36px;margin-bottom:10px">🚨</div><h4>Emergency Mode</h4><p>Get nearby doctor phone numbers instantly</p></div>
+        <div class="premium-item"><div style="font-size:36px;margin-bottom:10px">🔍</div><h4>Hospital Search</h4><p>Find any hospital or doctor by unique SARVAM ID</p></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- QR Modal -->
+  <div class="overlay" id="qrOverlay">
+    <div class="qr-modal">
+      <div class="qr-modal-head">
+        <h3>📱 Health QR Card</h3>
+        <button class="close-btn" onclick="closeQR()">×</button>
+      </div>
+      <div class="qr-card" id="printable-card">
+        <div class="qr-brand">SARVAM</div>
+        <div class="qr-sub">Health QR Platform</div>
+        <canvas id="qr-canvas" width="160" height="160"></canvas>
+        <div class="qr-info">
+          <p id="qr-pname">—</p>
+          <small id="qr-pdetail">—</small>
+        </div>
+        <div class="passkey-section">
+          <div class="passkey-label">BASIC ACCESS PASSKEY</div>
+          <div class="passkey" id="qr-passkey">——</div>
+          <div class="passkey-note">Show QR + passkey for basic info access</div>
+        </div>
+      </div>
+      <button class="btn-print" onclick="printCard()">🖨️ Print Health Card</button>
+    </div>
+  </div>
+
+  <!-- Upgrade Modal -->
+  <div class="overlay" id="upgradeOverlay">
+    <div class="upgrade-modal">
+      <div style="font-size:52px;margin-bottom:14px">⭐</div>
+      <h3>Upgrade to Premium</h3>
+      <p>Unlock AI assistant, online consultations, emergency mode, nearby doctors & more.</p>
+      <div class="upgrade-btns">
+        <button class="btn-later" onclick="document.getElementById('upgradeOverlay').classList.remove('show')">Later</button>
+        <button class="btn-gold" onclick="upgradePremium()">Upgrade ₹99/mo</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let patient = null;
+
+    window.onload = () => {
+      const stored = localStorage.getItem('sarvam_current_patient');
+      if (!stored) { window.location.href = 'patient-login.html'; return; }
+      patient = JSON.parse(stored);
+      renderProfile();
+    };
+
+    function renderProfile() {
+      document.getElementById('patAvatar').textContent = patient.full_name?.[0] || 'P';
+      document.getElementById('patName').textContent = patient.full_name;
+      const tags = document.getElementById('patTags');
+      tags.innerHTML = `
+        <span class="tag">Age: ${patient.age}</span>
+        <span class="tag blood">🩸 ${patient.blood_group}</span>
+        <span class="tag">${patient.mobile || 'No mobile'}</span>
+        ${patient.is_premium ? '<span class="tag premium">⭐ Premium</span>' : ''}
+      `;
+      if (patient.is_premium) document.getElementById('upgradeBtn').style.display = 'none';
+
+      // Overview
+      document.getElementById('ov-email').textContent = patient.email || '—';
+      document.getElementById('ov-mobile').textContent = patient.mobile || '—';
+      document.getElementById('ov-emergency').textContent = patient.emergency_contact || '—';
+      document.getElementById('ov-address').textContent = patient.address || '—';
+      document.getElementById('ov-blood').textContent = patient.blood_group;
+      document.getElementById('ov-age').textContent = patient.age;
+      document.getElementById('ov-abha').textContent = patient.abha_id || 'Not set';
+      document.getElementById('ov-chronic').textContent = (patient.chronic_diseases || []).join(', ') || 'None';
+
+      // Prescriptions in overview
+      const pres = (patient.prescriptions || []).slice(0, 2);
+      if (pres.length) {
+        document.getElementById('ov-prescriptions').innerHTML = pres.map(p => `<div class="record-item"><p>Dr. ${p.doctor_name}</p><small>${p.date} · ${p.hospital_name}</small></div>`).join('');
+      }
+
+      // Records tab
+      const labs = patient.lab_reports || [];
+      document.getElementById('rec-labs').innerHTML = labs.length ? labs.slice(0,5).map(r => `<div class="record-item"><p>${r.name}</p><small>${r.date} · ${r.hospital}</small></div>`).join('') : '<p class="empty">No lab reports yet</p>';
+      const allPres = patient.prescriptions || [];
+      document.getElementById('rec-pres').innerHTML = allPres.length ? allPres.slice(0,4).map(p => `<div class="record-item"><p>Dr. ${p.doctor_name}</p><small>${p.date} · ${p.hospital_name}</small></div>`).join('') : '<p class="empty">No prescriptions yet</p>';
+
+      // Visits
+      const visits = patient.hospital_visits || [];
+      document.getElementById('visits-list').innerHTML = visits.length ? visits.map((v, i) => `<div class="record-item" style="display:flex;justify-content:space-between;align-items:center"><div><p>${v.hospital}</p><small>${v.date} · ${v.city} · ${v.reason}</small></div><button onclick="deleteVisit(${i})" style="background:rgba(239,68,68,0.1);border:1px solid #ef4444;color:#ef4444;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px">Delete</button></div>`).join('') : '<p class="empty">No visits recorded yet</p>';
+    }
+
+    function deleteVisit(i) {
+      patient.hospital_visits.splice(i, 1);
+      savePatient();
+      renderProfile();
+    }
+
+    function savePatient() {
+      localStorage.setItem('sarvam_current_patient', JSON.stringify(patient));
+      const patients = JSON.parse(localStorage.getItem('sarvam_patients') || '[]');
+      const idx = patients.findIndex(p => p.id === patient.id);
+      if (idx >= 0) { patients[idx] = patient; localStorage.setItem('sarvam_patients', JSON.stringify(patients)); }
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach((t, i) => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      const tabBtns = document.querySelectorAll('.tab');
+      const map = { overview: 0, records: 1, visits: 2, ai: 3, premium: 4 };
+      if (tabBtns[map[name]]) tabBtns[map[name]].classList.add('active');
+      const panel = document.getElementById('panel-' + name);
+      if (panel) panel.classList.add('active');
+      if ((name === 'ai' || name === 'premium') && !patient.is_premium) { showUpgrade(); return; }
+    }
+
+    function showQR() {
+      document.getElementById('qr-pname').textContent = patient.full_name;
+      document.getElementById('qr-pdetail').textContent = `Age: ${patient.age} | Blood: ${patient.blood_group}`;
+      document.getElementById('qr-passkey').textContent = patient.basic_passkey || '——';
+      drawQR(patient.qr_code || 'SARVAM-' + patient.id);
+      document.getElementById('qrOverlay').classList.add('show');
+    }
+
+    function drawQR(text) {
+      const canvas = document.getElementById('qr-canvas');
+      const ctx = canvas.getContext('2d');
+      const s = 160;
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,s,s);
+      // Simple visual QR placeholder with grid
+      ctx.fillStyle = '#0a0f1e';
+      const cell = 10;
+      for (let r=0;r<16;r++) for (let c=0;c<16;c++) {
+        const n = (text.charCodeAt(r%text.length) + text.charCodeAt(c%text.length) + r*c) % 3;
+        if (n === 0) ctx.fillRect(c*cell, r*cell, cell, cell);
+      }
+      // Corner squares
+      [[0,0],[0,11],[11,0]].forEach(([r,c]) => {
+        ctx.fillStyle = '#0066ff'; ctx.fillRect(c*cell,r*cell,4*cell,4*cell);
+        ctx.fillStyle = '#fff'; ctx.fillRect(c*cell+cell,r*cell+cell,2*cell,2*cell);
+        ctx.fillStyle = '#0066ff'; ctx.fillRect(c*cell+cell,r*cell+cell,cell,cell);
+      });
+      // Text
+      ctx.fillStyle = '#0066ff'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('SARVAM', s/2, s-4);
+    }
+
+    function closeQR() { document.getElementById('qrOverlay').classList.remove('show'); }
+
+    function printCard() {
+      const card = document.getElementById('printable-card').innerHTML;
+      const w = window.open('', '_blank');
+      w.document.write(`<html><head><title>SARVAM Health Card</title><style>body{font-family:sans-serif;display:flex;justify-content:center;padding:40px;background:#0a0f1e;color:#fff} *{box-sizing:border-box}</style></head><body>${card}</body></html>`);
+      w.document.close();
+      w.print();
+    }
+
+    function showUpgrade() { document.getElementById('upgradeOverlay').classList.add('show'); }
+
+    function upgradePremium() {
+      patient.is_premium = true;
+      savePatient();
+      document.getElementById('upgradeOverlay').classList.remove('show');
+      renderProfile();
+      alert('🎉 Welcome to SARVAM Premium!\n\nAll premium features are now unlocked.');
+    }
+
+    function logout() {
+      localStorage.removeItem('sarvam_current_patient');
+      window.location.href = 'index.html';
+    }
+
+    async function askAI() {
+      if (!patient.is_premium) { showUpgrade(); return; }
+      const q = document.getElementById('ai-query').value.trim();
+      if (!q) return;
+      const btn = document.querySelector('.ai-btn');
+      btn.textContent = 'Thinking... 🤔';
+      btn.disabled = true;
+      const resp = document.getElementById('ai-resp');
+      resp.style.display = 'none';
+      try {
+        const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer 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' },
+          body: JSON.stringify({ model: 'openai/gpt-oss-20b', messages: [{ role: 'system', content: 'You are a helpful health assistant. Give practical home remedies for common symptoms like fever, cold, headache, stomachache, vomiting. Keep responses short and clear. Always suggest seeing a doctor for serious symptoms.' }, { role: 'user', content: q }], max_tokens: 400 })
+        });
+        const data = await res.json();
+        resp.textContent = data.choices?.[0]?.message?.content || 'No response received.';
+      } catch(e) {
+        resp.textContent = '⚠️ AI assistant temporarily unavailable. Please try again.';
+      }
+      resp.style.display = 'block';
+      btn.textContent = 'Ask AI 🤖';
+      btn.disabled = false;
+    }
+  </script>
+</body>
+</html>

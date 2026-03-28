@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Dashboard - SARVAM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; background: linear-gradient(135deg, #0a0f1e, #0d1b3e); font-family: 'Segoe UI', sans-serif; color: #fff; }
+    nav { background: rgba(13,27,62,0.95); border-bottom: 1px solid #1e3a5f; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .brand { background: linear-gradient(90deg, #0066ff, #00ccaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 22px; letter-spacing: 4px; }
+    .btn-sm { padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; font-family: inherit; border: 1px solid #1e3a5f; background: transparent; color: #94a3b8; }
+    main { max-width: 1000px; margin: 0 auto; padding: 28px 20px; }
+    .profile-card { background: linear-gradient(135deg, rgba(0,204,170,0.1), rgba(0,102,255,0.07)); border: 1px solid #1e3a5f; border-radius: 20px; padding: 24px 28px; display: flex; gap: 20px; align-items: center; margin-bottom: 28px; flex-wrap: wrap; }
+    .avatar { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #00ccaa, #0066ff); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+    .info h2 { font-size: 21px; margin-bottom: 8px; }
+    .tags { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tag { padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.05); font-size: 12px; color: #94a3b8; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .tab { padding: 10px 24px; border-radius: 20px; border: none; background: rgba(255,255,255,0.05); color: #94a3b8; cursor: pointer; font-family: inherit; font-size: 14px; }
+    .tab.active { background: linear-gradient(135deg, #00ccaa, #0066ff); color: #fff; font-weight: 700; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .scanner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:700px) { .scanner-grid { grid-template-columns: 1fr; } }
+    .card { background: rgba(255,255,255,0.02); border: 1px solid #1e3a5f; border-radius: 16px; padding: 22px; }
+    .card h3 { font-size: 14px; color: #64748b; margin-bottom: 16px; }
+    input { width: 100%; padding: 12px 14px; border-radius: 9px; border: 1px solid #1e3a5f; background: #0a0f1e; color: #fff; font-size: 14px; outline: none; margin-bottom: 10px; font-family: inherit; }
+    .btn { padding: 12px 20px; border-radius: 9px; border: none; background: linear-gradient(135deg, #00ccaa, #0066ff); color: #fff; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px; width: 100%; margin-bottom: 10px; }
+    .btn-unlock { padding: 11px 16px; border-radius: 8px; border: none; background: #0066ff; color: #fff; cursor: pointer; font-family: inherit; font-size: 13px; }
+    .found-box { background: rgba(0,204,170,0.05); border: 1px solid rgba(0,204,170,0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; font-size: 13px; color: #00ccaa; }
+    .err { color: #ef4444; font-size: 13px; margin-bottom: 8px; }
+    .access-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; }
+    .badge-basic { background: rgba(0,102,255,0.1); color: #0066ff; border: 1px solid #0066ff44; }
+    .badge-detailed { background: rgba(0,204,170,0.1); color: #00ccaa; border: 1px solid #00ccaa44; }
+    .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .row .lbl { color: #64748b; }
+    .row .val { color: #e2e8f0; font-weight: 500; }
+    .record-item { padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 7px; margin-bottom: 6px; }
+    .record-item p { font-size: 13px; color: #e2e8f0; }
+    .record-item small { font-size: 11px; color: #64748b; }
+    .sec-title { font-size: 12px; color: #64748b; font-weight: 600; margin: 12px 0 8px; }
+    .empty { color: #4a5568; font-size: 13px; }
+    .upgrade-box { background: rgba(0,102,255,0.05); border: 1px solid #0066ff33; border-radius: 10px; padding: 14px; margin-top: 12px; text-align: center; }
+    .upgrade-box p { font-size: 13px; color: #0066ff; margin-bottom: 10px; }
+    .detail-unlock { display: flex; gap: 8px; margin-top: 10px; }
+    .detail-unlock input { margin-bottom: 0; flex: 1; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="brand">SARVAM</div>
+    <button class="btn-sm" onclick="logout()">Logout</button>
+  </nav>
+  <main>
+    <div class="profile-card">
+      <div class="avatar" id="docAvatar">D</div>
+      <div class="info">
+        <h2 id="docName">Doctor</h2>
+        <div class="tags" id="docTags"></div>
+        <p style="color:#64748b;font-size:12px;margin-top:8px" id="docAddr">—</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('scanner')">📱 QR Scanner</button>
+      <button class="tab" onclick="switchTab('profile')">👤 My Profile</button>
+    </div>
+
+    <div class="panel active" id="panel-scanner">
+      <div class="scanner-grid">
+        <div class="card">
+          <h3>📱 Scan Patient QR</h3>
+          <input type="text" id="scan-input" placeholder="Enter QR code or Patient ID" onkeydown="if(event.key==='Enter')lookupPatient()" />
+          <button class="btn" onclick="lookupPatient()">🔍 Find Patient</button>
+          <div id="scan-err" class="err"></div>
+          <div id="found-msg" style="display:none" class="found-box">✓ Patient found — Enter access key</div>
+          <div id="access-form" style="display:none">
+            <input type="text" id="access-key" placeholder="Passkey (basic) / Password (detailed) / type 'otp'" onkeydown="if(event.key==='Enter')verifyAccess()" />
+            <div id="access-err" class="err"></div>
+            <button class="btn" onclick="verifyAccess()">Access Records</button>
+            <div id="otp-form" style="display:none">
+              <input type="text" id="otp-val" placeholder="Enter OTP" />
+              <button class="btn" onclick="verifyOTP()" style="margin-top:0">Verify OTP</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="overflow-y:auto;max-height:560px" id="result-panel">
+          <div style="text-align:center;padding:40px 20px">
+            <div style="font-size:48px;margin-bottom:12px">📱</div>
+            <p style="color:#64748b;font-size:14px">Scan or enter a patient QR code to begin</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-profile">
+      <div class="card" style="max-width:500px">
+        <h3>👤 My Profile</h3>
+        <div id="profile-rows"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let doctor = null;
+    let scannedPatient = null;
+    let generatedOTP = '';
+    let currentAccess = null;
+
+    window.onload = () => {
+      const stored = localStorage.getItem('sarvam_current_doctor');
+      if (!stored) { window.location.href = 'doctor-login.html'; return; }
+      doctor = JSON.parse(stored);
+      renderDoctor();
+    };
+
+    function renderDoctor() {
+      document.getElementById('docAvatar').textContent = doctor.full_name?.[0] || 'D';
+      document.getElementById('docName').textContent = 'Dr. ' + doctor.full_name;
+      document.getElementById('docTags').innerHTML = [doctor.specialization || doctor.qualification, `${doctor.experience_years || 0} yrs exp`, doctor.hospital_name, doctor.unique_doctor_id ? `ID: ${doctor.unique_doctor_id}` : ''].filter(Boolean).map(t => `<span class="tag">${t}</span>`).join('');
+      document.getElementById('docAddr').textContent = '📍 ' + (doctor.current_address || 'Address not set') + ' · 📞 ' + (doctor.mobile || '—');
+      document.getElementById('profile-rows').innerHTML = [['Full Name', doctor.full_name], ['Email', doctor.email], ['Mobile', doctor.mobile], ['Age', doctor.age], ['Experience', doctor.experience_years + ' years'], ['Qualification', doctor.qualification], ['Specialization', doctor.specialization], ['Hospital', doctor.hospital_name], ['Doctor ID', doctor.unique_doctor_id], ['Address', doctor.current_address]].map(([l, v]) => `<div class="row"><span class="lbl">${l}</span><span class="val">${v || '—'}</span></div>`).join('');
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      const idx = name === 'scanner' ? 0 : 1;
+      document.querySelectorAll('.tab')[idx].classList.add('active');
+      document.getElementById('panel-' + name).classList.add('active');
+    }
+
+    function lookupPatient() {
+      const val = document.getElementById('scan-input').value.trim();
+      if (!val) return;
+      const patients = JSON.parse(localStorage.getItem('sarvam_patients') || '[]');
+      scannedPatient = patients.find(p => p.qr_code === val || p.id === val);
+      if (!scannedPatient) { document.getElementById('scan-err').textContent = 'Patient QR not found.'; document.getElementById('found-msg').style.display = 'none'; document.getElementById('access-form').style.display = 'none'; return; }
+      document.getElementById('scan-err').textContent = '';
+      document.getElementById('found-msg').style.display = 'block';
+      document.getElementById('access-form').style.display = 'block';
+      currentAccess = null;
+      document.getElementById('result-panel').innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:12px">🔐</div><p style="color:#64748b;font-size:14px">Enter access key to view records</p></div>';
+    }
+
+    function verifyAccess() {
+      const key = document.getElementById('access-key').value.trim();
+      const errEl = document.getElementById('access-err');
+      errEl.textContent = '';
+      if (key.toUpperCase() === scannedPatient.basic_passkey?.toUpperCase()) { loadRecords('basic'); return; }
+      if (key === scannedPatient.detailed_password) { loadRecords('detailed'); return; }
+      if (key.toLowerCase() === 'otp') {
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        alert(`OTP for detailed access to ${scannedPatient.full_name}:\n\n${generatedOTP}`);
+        document.getElementById('otp-form').style.display = 'block';
+        return;
+      }
+      errEl.textContent = 'Invalid key. Enter passkey (basic), password (detailed), or type "otp".';
+    }
+
+    function verifyOTP() {
+      const val = document.getElementById('otp-val').value.trim();
+      if (val === generatedOTP) { document.getElementById('otp-form').style.display = 'none'; loadRecords('detailed'); }
+      else document.getElementById('access-err').textContent = 'Invalid OTP.';
+    }
+
+    function loadRecords(level) {
+      currentAccess = level;
+      const p = scannedPatient;
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="color:#e2e8f0;font-size:15px;margin:0">${p.full_name}</h3><span class="access-badge ${level === 'detailed' ? 'badge-detailed' : 'badge-basic'}">${level === 'detailed' ? '🔓 Detailed' : '🔒 Basic'}</span></div>`;
+      html += `<div class="sec-title">Basic Info</div>`;
+      html += [['Age', p.age], ['Blood Group', p.blood_group], ['Mobile', p.mobile || '—'], ['Emergency', p.emergency_contact || '—'], ['Chronic', (p.chronic_diseases || []).join(', ') || 'None']].map(([l,v]) => `<div class="row"><span class="lbl">${l}</span><span class="val">${v}</span></div>`).join('');
+      if (level === 'basic') {
+        html += `<div class="upgrade-box"><p style="margin-bottom:8px">Enter password or OTP for detailed access</p><div class="detail-unlock"><input type="text" id="detail-key" placeholder="Detailed password" /><button class="btn-unlock" onclick="tryDetailed()">Unlock</button></div></div>`;
+      }
+      if (level === 'detailed') {
+        const pres = p.prescriptions || [];
+        html += `<div class="sec-title">💊 Prescriptions (Last 4)</div>`;
+        html += pres.length ? pres.slice(0,4).map(x => `<div class="record-item"><p>Dr. ${x.doctor_name}</p><small>${x.date} · ${x.hospital_name}</small></div>`).join('') : '<p class="empty">None</p>';
+        const labs = p.lab_reports || [];
+        html += `<div class="sec-title">🧪 Lab Reports (Last 5)</div>`;
+        html += labs.length ? labs.slice(0,5).map(x => `<div class="record-item"><p>${x.name}</p><small>${x.date} · ${x.hospital}</small></div>`).join('') : '<p class="empty">None</p>';
+        html += `<div class="sec-title">More</div>`;
+        html += [['ABHA ID', p.abha_id || '—'], ['Address', p.address || '—']].map(([l,v]) => `<div class="row"><span class="lbl">${l}</span><span class="val">${v}</span></div>`).join('');
+      }
+      document.getElementById('result-panel').innerHTML = html;
+    }
+
+    function tryDetailed() {
+      const key = document.getElementById('detail-key')?.value.trim();
+      if (key === scannedPatient.detailed_password) loadRecords('detailed');
+      else alert('Invalid detailed password.');
+    }
+
+    function logout() { localStorage.removeItem('sarvam_current_doctor'); window.location.href = 'index.html'; }
+  </script>
+</body>
+</html>
